@@ -22,7 +22,7 @@ function getTurtleNameFromModem()
     if modem then
         return modem.getNameLocal()
     else
-        error("No modem found on the bottom side!")
+        error("No modem found on the bottom of the turtle!")
     end
 end
 
@@ -147,39 +147,52 @@ function fusionCraft(monitor, monitorWidth, monitorHeight)
     local turtleName = getTurtleNameFromModem()
     print("Using turtle name from modem: " .. turtleName)
 
-    -- Step 4: Idle state check, ensure slot 9 has an item before continuing
-    updateMonitor(monitor, "Idle: Waiting for item in slot 9...", colors.yellow, monitorWidth, monitorHeight)
-    while turtle.getItemCount(9) == 0 do
-        print("Idle state: Waiting for item in slot 9...")
+    -- Step 4: Idle state check for slot 9 in the turtle or slot 1 in the crafting core
+    while turtle.getItemCount(9) == 0 and craftingCore.getItem(1) == nil do
+        updateMonitor(monitor, "Idle: Waiting for item in turtle slot 9 or core slot 1...", colors.yellow, monitorWidth, monitorHeight)
+        print("Idle state: Waiting for item in turtle slot 9 or core slot 1...")
         sleep(2) -- Check every 2 seconds
     end
-    updateMonitor(monitor, "Item detected. Starting crafting process...", colors.green, monitorWidth, monitorHeight)
-    print("Item detected in slot 9, starting crafting process...")
 
-    -- Step 5: Place items from turtle's slots 1-8 into injectors' slot 1
-    updateMonitor(monitor, "Distributing items to injectors...", colors.yellow, monitorWidth, monitorHeight)
-    for i = 1, 8 do
-        if turtle.getItemCount(i) == 0 then
-            error("Slot " .. i .. " in the turtle is empty. Expected an item for crafting.")
+    if craftingCore.getItem(1) then
+        -- Item already in core, skip directly to step 7
+        updateMonitor(monitor, "Item detected in core. Starting crafting...", colors.green, monitorWidth, monitorHeight)
+        print("Item detected in crafting core. Skipping item distribution and starting crafting process...")
+
+        -- Step 7: Trigger a redstone signal to start the crafting process
+        updateMonitor(monitor, "Sending redstone signal to start crafting...", colors.yellow, monitorWidth, monitorHeight)
+        triggerRedstoneSignal()
+
+    else
+        -- Proceed with item distribution since item was detected in turtle slot 9
+        updateMonitor(monitor, "Item detected in turtle. Starting crafting process...", colors.green, monitorWidth, monitorHeight)
+        print("Item detected in turtle slot 9, starting crafting process...")
+
+        -- Step 5: Place items from turtle's slots 1-8 into injectors' slot 1
+        updateMonitor(monitor, "Distributing items to injectors...", colors.yellow, monitorWidth, monitorHeight)
+        for i = 1, 8 do
+            if turtle.getItemCount(i) == 0 then
+                error("Slot " .. i .. " in the turtle is empty. Expected an item for crafting.")
+            end
+
+            local injector = injectors[i]
+            if injector.pullItems(turtleName, i, 64, 1) == 0 then
+                error("Failed to move item from turtle slot " .. i .. " to injector " .. i)
+            end
         end
+        updateMonitor(monitor, "Items distributed. Placing item in crafting core...", colors.green, monitorWidth, monitorHeight)
+        print("All items distributed to injectors.")
 
-        local injector = injectors[i]
-        if injector.pullItems(turtleName, i, 64, 1) == 0 then
-            error("Failed to move item from turtle slot " .. i .. " to injector " .. i)
+        -- Step 6: Place item from slot 9 into slot 1 of the crafting core
+        if craftingCore.pullItems(turtleName, 9, 64, 1) == 0 then
+            error("Failed to move item from turtle slot 9 to the crafting core.")
         end
-    end
-    updateMonitor(monitor, "Items distributed. Placing item in crafting core...", colors.green, monitorWidth, monitorHeight)
-    print("All items distributed to injectors.")
+        print("Item from slot 9 placed into the crafting core.")
 
-    -- Step 6: Place item from slot 9 into slot 1 of the crafting core
-    if craftingCore.pullItems(turtleName, 9, 64, 1) == 0 then
-        error("Failed to move item from turtle slot 9 to the crafting core.")
+        -- Step 7: Trigger a redstone signal to start the crafting process
+        updateMonitor(monitor, "Sending redstone signal to start crafting...", colors.yellow, monitorWidth, monitorHeight)
+        triggerRedstoneSignal()
     end
-    print("Item from slot 9 placed into the crafting core.")
-
-    -- Step 7: Trigger a redstone signal to start the crafting process
-    updateMonitor(monitor, "Sending redstone signal to start crafting...", colors.yellow, monitorWidth, monitorHeight)
-    triggerRedstoneSignal()
 
     -- Step 8: Monitor the crafting core for an item in slot 2 using getItem() and flash the background
     parallel.waitForAny(
