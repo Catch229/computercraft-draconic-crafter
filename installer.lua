@@ -1,4 +1,4 @@
-url = "https://raw.githubusercontent.com/Catch229/computercraft-draconic-crafter/main/fusion.lua"
+url = "https://raw.githubusercontent.com/Catch229/computercraft-draconic-crafter/refs/heads/main/fusion.lua"
 programName = "CC Auto Fusion Crafter"
 fileLoc = "fusion.lua"
 
