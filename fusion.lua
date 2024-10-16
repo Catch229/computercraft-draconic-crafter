@@ -168,16 +168,16 @@ function fusionCraft(monitor, monitorWidth, monitorHeight)
         updateMonitor(monitor, "Item detected in turtle. Starting crafting process...", colors.green, monitorWidth, monitorHeight)
         print("Item detected in turtle slot 9, starting crafting process...")
 
-        -- Step 5: Place items from turtle's slots 1-8 into injectors' slot 1
+        -- Step 5: Place items from turtle's slots 1-8 into injectors' slot 1, skipping empty slots
         updateMonitor(monitor, "Distributing items to injectors...", colors.yellow, monitorWidth, monitorHeight)
         for i = 1, 8 do
-            if turtle.getItemCount(i) == 0 then
-                error("Slot " .. i .. " in the turtle is empty. Expected an item for crafting.")
-            end
-
-            local injector = injectors[i]
-            if injector.pullItems(turtleName, i, 64, 1) == 0 then
-                error("Failed to move item from turtle slot " .. i .. " to injector " .. i)
+            if turtle.getItemCount(i) > 0 then -- Only move items from non-empty slots
+                local injector = injectors[i]
+                if injector.pullItems(turtleName, i, 64, 1) == 0 then
+                    error("Failed to move item from turtle slot " .. i .. " to injector " .. i)
+                end
+            else
+                print("Skipping empty turtle slot " .. i)
             end
         end
         updateMonitor(monitor, "Items distributed. Placing item in crafting core...", colors.green, monitorWidth, monitorHeight)
