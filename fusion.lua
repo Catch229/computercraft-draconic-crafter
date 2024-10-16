@@ -1,10 +1,28 @@
+-- Helper function to wrap the modem on the bottom and find the monitor on its network
+function findMonitorOnBottomModem()
+    local modem = peripheral.wrap("bottom") -- Specify the modem on the "bottom"
+    if not modem then
+        error("No modem found on the bottom side!")
+    end
+
+    -- Get a list of remote peripherals connected through this modem
+    local peripherals = modem.getNamesRemote()
+    for _, name in ipairs(peripherals) do
+        if peripheral.getType(name) == "monitor" then
+            return peripheral.wrap(name)
+        end
+    end
+
+    error("No monitor found on the network connected to the modem on the bottom side!")
+end
+
 -- Helper function to wrap the modem and get the turtle's network name
 function getTurtleNameFromModem()
-    local modem = peripheral.find("modem") -- Assuming the modem is attached to the turtle
+    local modem = peripheral.wrap("bottom") -- Assuming the modem is on the bottom of the turtle
     if modem then
         return modem.getNameLocal()
     else
-        error("No modem found attached to the turtle!")
+        error("No modem found on the bottom side!")
     end
 end
 
@@ -35,16 +53,6 @@ function findCraftingCore()
         end
     end
     error("Could not find the crafting core on the network!")
-end
-
--- Helper function to find the monitor on the network
-function findMonitor()
-    for _, name in ipairs(peripheral.getNames()) do
-        if peripheral.getType(name) == "monitor" then
-            return peripheral.wrap(name)
-        end
-    end
-    error("No monitor found on the network!")
 end
 
 -- Function to briefly output a redstone signal from the front of the turtle
@@ -135,7 +143,7 @@ function fusionCraft(monitor, monitorWidth, monitorHeight)
     local craftingCore = findCraftingCore()
     print("Found the fusion crafting core.")
 
-    -- Step 3: Get the turtle's network name from the modem
+    -- Step 3: Get the turtle's network name from the modem on the bottom
     local turtleName = getTurtleNameFromModem()
     print("Using turtle name from modem: " .. turtleName)
 
@@ -203,8 +211,8 @@ end
 
 -- Main loop
 function main()
-    -- Find the monitor on the network
-    local monitor = findMonitor()
+    -- Find the monitor on the network connected through the bottom modem
+    local monitor = findMonitorOnBottomModem()
 
     -- Get the monitor's size (width and height)
     local monitorWidth, monitorHeight = monitor.getSize()
