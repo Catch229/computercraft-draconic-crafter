@@ -36,10 +36,10 @@ function findInjectors()
         end
     end
 
-    if #injectors == 8 then
-        print("Found 8 crafting injectors.")
+    if #injectors == 10 then
+        print("Found 10 crafting injectors.")
     else
-        error("Could not find 8 injectors. Found " .. #injectors .. " injectors.")
+        error("Could not find 10 injectors. Found " .. #injectors .. " injectors.")
     end
 
     return injectors
@@ -168,8 +168,10 @@ function fusionCraft(monitor, monitorWidth, monitorHeight)
         updateMonitor(monitor, "Item detected in turtle. Starting crafting process...", colors.green, monitorWidth, monitorHeight)
         print("Item detected in turtle slot 9, starting crafting process...")
 
-        -- Step 5: Place items from turtle's slots 1-8 into injectors' slot 1, skipping empty slots
+        -- Step 5: Place items from turtle's slots 1-8 and 10-11 into injectors' slots 1-10, skipping empty slots
         updateMonitor(monitor, "Distributing items to injectors...", colors.yellow, monitorWidth, monitorHeight)
+        
+        -- First 8 injectors (slots 1-8)
         for i = 1, 8 do
             if turtle.getItemCount(i) > 0 then -- Only move items from non-empty slots
                 local injector = injectors[i]
@@ -180,6 +182,20 @@ function fusionCraft(monitor, monitorWidth, monitorHeight)
                 print("Skipping empty turtle slot " .. i)
             end
         end
+
+        -- Injector 9 (turtle slot 10) and Injector 10 (turtle slot 11)
+        for i = 9, 10 do
+            local turtleSlot = i + 1 -- Mapping injector 9 to slot 10, and injector 10 to slot 11
+            if turtle.getItemCount(turtleSlot) > 0 then -- Only move items from non-empty slots
+                local injector = injectors[i]
+                if injector.pullItems(turtleName, turtleSlot, 64, 1) == 0 then
+                    error("Failed to move item from turtle slot " .. turtleSlot .. " to injector " .. i)
+                end
+            else
+                print("Skipping empty turtle slot " .. turtleSlot)
+            end
+        end
+
         updateMonitor(monitor, "Items distributed. Placing item in crafting core...", colors.green, monitorWidth, monitorHeight)
         print("All items distributed to injectors.")
 
